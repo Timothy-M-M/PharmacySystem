@@ -1,0 +1,9 @@
+# Environments
+venv/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Database (Optional: remove this line if you want your group to see your test data)
+db.sqlite3
