@@ -1,75 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register Drug - Pharmacy System</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'dashboard' %}">Pharmacy System</a>
-            <div class="navbar-nav me-auto">
-                <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="nav-link active" href="{% url 'inventory' %}">Inventory</a>
-                <a class="nav-link" href="{% url 'pos' %}">POS Terminal</a>
-                <a class="nav-link" href="{% url 'reports' %}">Reports</a>
-            </div>
-            <div class="navbar-nav align-items-center">
-                <span class="navbar-text me-3 text-white">User: {{ request.user.username }}</span>
-                <a class="btn btn-danger btn-sm" href="{% url 'logout' %}">Logout</a>
-            </div>
-        </div>
-    </nav>
+{% extends 'core/base.html' %}
+{% block title %}Add Drug - Pharmacy{% endblock %}
+{% block page_title %}New Product{% endblock %}
+{% block breadcrumb %}Catalog / Add Drug{% endblock %}
 
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card shadow">
-                    <div class="card-header bg-success text-white">
-                        <h4 class="mb-0">Register New Medication Catalog Profile</h4>
-                    </div>
-                    <div class="card-body">
-                        
-                        {% if messages %}
-                            {% for message in messages %}
-                                <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}">
-                                    {{ message }}
-                                </div>
-                            {% endfor %}
-                        {% endif %}
-
-                        <form method="POST" action="">
-                            {% csrf_token %}
-                            <div class="mb-3">
-                                <label class="form-label">Drug Name</label>
-                                <input type="text" class="form-control" name="drug_name" placeholder="e.g., Amoxicillin 500mg" required>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Unit Type</label>
-                                <select class="form-select" name="unit" required>
-                                    <option value="" selected disabled>Select how it is sold...</option>
-                                    <option value="Tablet">Tablet</option>
-                                    <option value="Capsule">Capsule</option>
-                                    <option value="Bottle">Bottle (Syrup)</option>
-                                    <option value="Injection">Injection/Vial</option>
-                                    <option value="Cream/Ointment">Cream/Ointment</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label class="form-label">Description / Notes (Optional)</label>
-                                <textarea class="form-control" name="description" rows="3" placeholder="Enter any specific storage instructions or details..."></textarea>
-                            </div>
-
-                            <button type="submit" class="btn btn-success w-100 mt-2">Save to Catalog</button>
-                        </form>
-                    </div>
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="custom-card">
+            <h6 class="fw-bold mb-4">Product Details</h6>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label class="form-label text-muted small fw-bold">PRODUCT NAME</label>
+                    <input type="text" class="form-control bg-light border-0 py-3 rounded-4" name="drug_name" placeholder="e.g. Paracetamol 500mg" required>
                 </div>
-            </div>
+                <div class="mb-5">
+                    <label class="form-label text-muted small fw-bold">UNIT TYPE</label>
+                    <select class="form-select bg-light border-0 py-3 rounded-4" name="unit" required>
+                        <option value="" selected disabled>Select type...</option>
+                        <option value="Tablet">Tablet</option><option value="Capsule">Capsule</option><option value="Bottle">Bottle</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-3">
+                    <a href="{% url 'inventory' %}" class="btn btn-light w-50 py-3 rounded-pill fw-bold text-dark">Cancel</a>
+                    <button type="submit" class="btn btn-dark w-50 py-3 rounded-pill fw-bold">Save Product</button>
+                </div>
+            </form>
         </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

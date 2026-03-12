@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Pharmacy System{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* New Minimalist Medrack Color Palette */
+        :root {
+            --bg-color: #f8f9fa; /* Very soft off-white background */
+            --sidebar-bg: #ffffff;
+            --text-main: #1a1a1a;
+            --text-muted: #8e95a5;
+            --accent-gold: #eab308; /* The yellow/gold from the image */
+            --accent-light: #fff8eb; /* Light yellow background for active items */
+            --card-bg: #ffffff;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Sidebar Styling */
+        .sidebar {
+            height: 100vh;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: var(--sidebar-bg);
+            padding-top: 30px;
+            border-right: 1px solid #f0f0f0; /* Very subtle border instead of drop shadow */
+            z-index: 1000;
+        }
+        .sidebar-brand {
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 0 25px 30px;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+        .nav-item { padding: 0 15px; margin-bottom: 4px; }
+        .nav-link {
+            color: var(--text-muted);
+            border-radius: 8px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        .nav-link:hover { color: var(--text-main); }
+        /* The new yellow active state */
+        .nav-link.active { 
+            background-color: var(--accent-light); 
+            color: var(--accent-gold); 
+            font-weight: 600; 
+        }
+        
+        /* Main Content Area */
+        .main-content {
+            margin-left: 250px;
+            padding: 40px 50px;
+            min-height: 100vh;
+        }
+        .top-bar { margin-bottom: 40px; }
+        
+        /* Modern Minimalist Cards */
+        .custom-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            border: 1px solid #f0f0f0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.01); /* Barely visible shadow */
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-layer-group me-2" style="color: var(--accent-gold);"></i> Pharmacy
+        </div>
+        
+        <div class="nav flex-column mt-3">
+            <p class="text-muted small px-4 mb-2 fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">MENU</p>
+            
+            <div class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
+                    <i class="fa-solid fa-border-all w-20px"></i> Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'pos' %}active{% endif %}" href="{% url 'pos' %}">
+                    <i class="fa-solid fa-desktop w-20px"></i> POS
+                </a>
+            </div>
+            <div class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}" href="{% url 'inventory' %}">
+                    <i class="fa-solid fa-boxes-stacked w-20px"></i> Inventory Management
+                </a>
+            </div>
+            
+            <p class="text-muted small px-4 mt-4 mb-2 fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">SETTINGS</p>
+            {% if request.user.is_superuser %}
+            <div class="nav-item">
+                <a class="nav-link {% if request.resolver_match.url_name == 'manage_staff' %}active{% endif %}" href="{% url 'manage_staff' %}">
+                    <i class="fa-regular fa-user w-20px"></i> User Management
+                </a>
+            </div>
+            {% endif %}
+            <div class="nav-item mt-auto pt-4">
+                <a class="nav-link text-danger" href="{% url 'logout' %}">
+                    <i class="fa-solid fa-arrow-right-from-bracket w-20px"></i> Logout
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-bar d-flex justify-content-between align-items-end">
+            <div>
+                <h2 class="mb-1 fw-bold" style="letter-spacing: -0.5px;">{% block page_title %}Analytics{% endblock %}</h2>
+                <div class="text-muted small">Pharmacy / {% block breadcrumb %}Analytics{% endblock %}</div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <div class="text-end me-2">
+                    <div class="fw-bold fs-6 lh-1">{{ request.user.username }}</div>
+                </div>
+                <div class="bg-light rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-user text-muted"></i>
+                </div>
+            </div>
+        </div>
+
+        {% block content %}
+        {% endblock %}
+    </div>
+
+</body>
+</html>
