@@ -6,8 +6,10 @@ from .models import Drug, Batch, Transaction, SaleItem
 from datetime import date, timedelta
 from django.core.exceptions import ValidationError
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
-@login_required(login_url='/admin/login/')
+@login_required(login_url='login')
 def dashboard(request):
     # Base summary
     total_drugs = Drug.objects.count()
@@ -39,7 +41,7 @@ def dashboard(request):
 
 
 
-@login_required(login_url='/admin/login/')
+@login_required(login_url='login')
 def inventory(request):
     # Grab all batches and sort them by expiry date (earliest first)
     batches = Batch.objects.all().order_by('expiry_date')
@@ -51,7 +53,7 @@ def inventory(request):
 
 
 
-@login_required(login_url='/admin/login/')
+@login_required(login_url='login')
 def pos(request):
     if request.method == 'POST':
         drug_id = request.POST.get('drug_id')
@@ -135,7 +137,7 @@ def pos(request):
     return render(request, 'core/pos.html', context)
 
 
-@login_required(login_url='/admin/login/')
+@login_required(login_url='login')
 def add_batch(request):
     if request.method == 'POST':
         # Grab all the data from the HTML form
@@ -187,7 +189,7 @@ def add_batch(request):
 
 
 
-@login_required(login_url='/admin/login/')
+@login_required(login_url='login')
 def reports(request):
     # Fetch recent sales (ordered by newest first)
     recent_sales = Transaction.objects.all().order_by('-transaction_date')[:50]
@@ -233,7 +235,7 @@ def custom_logout(request):
 
 
 
-@login_required(login_url='/admin/login/')
+@login_required(login_url='login')
 def receipt(request, txn_id):
     try:
         # Fetch the main transaction header
@@ -250,3 +252,96 @@ def receipt(request, txn_id):
     except Transaction.DoesNotExist:
         messages.error(request, "Receipt not found.")
         return redirect('reports')
+    
+    
+    
+@login_required(login_url='login')
+def add_drug(request):
+    if request.method == 'POST':
+        drug_name = request.POST.get('drug_name')
+        description = request.POST.get('description')
+        unit = request.POST.get('unit')
+        
+        try:
+            # Check if drug already exists (case-insensitive)
+            if Drug.objects.filter(drug_name__iexact=drug_name).exists():
+                messages.error(request, f"The medication '{drug_name}' is already registered in the catalog.")
+            else:
+                # Save the brand new drug
+                Drug.objects.create(
+                    drug_name=drug_name,
+                    unit=unit
+                )
+                messages.success(request, f"'{drug_name}' registered successfully! You can now add batches for it.")
+                return redirect('inventory')
+                
+        except Exception as e:
+            messages.error(request, f"An error occurred: {e}")
+            
+    return render(request, 'core/add_drug.html')
+
+
+
+@login_required(login_url='login')
+def manage_staff(request):
+    # Security check: Only Admins (superusers) can view this page
+    if not request.user.is_superuser:
+        messages.error(request, "Access Denied: Only Administrators can manage staff.")
+        return redirect('dashboard')
+    
+    # Get all registered users
+    staff_members = User.objects.all()
+    return render(request, 'core/manage_staff.html', {'staff_members': staff_members})
+
+@login_required(login_url='login')
+def add_staff(request):
+    if not request.user.is_superuser:
+        messages.error(request, "Access Denied: Only Administrators can add staff.")
+        return redirect('dashboard')
+
+    if request.method == 'POST':
+        u_name = request.POST.get('username')
+        p_word = request.POST.get('password')
+        email = request.POST.get('email')
+        
+        # Check if username is already taken
+        if User.objects.filter(username=u_name).exists():
+            messages.error(request, f"The username '{u_name}' is already taken.")
+        else:
+            # Create the standard cashier account
+            User.objects.create_user(username=u_name, email=email, password=p_word)
+            messages.success(request, f"Cashier account '{u_name}' created successfully!")
+            return redirect('manage_staff')
+
+    return render(request, 'core/add_staff.html')
+
+
+
+
+
+@login_required(login_url='login')
+def dispose_batch(request, batch_id):
+    from .models import Batch # Importing here just in case!
+    
+    try:
+        batch = Batch.objects.get(id=batch_id)
+    except Batch.DoesNotExist:
+        messages.error(request, "Error: Batch not found.")
+        return redirect('inventory')
+
+    if request.method == 'POST':
+        # Grab the amount they want to throw away
+        dispose_qty = int(request.POST.get('dispose_quantity', 0))
+        reason = request.POST.get('reason', '')
+
+        # NOTE: If your database field for the stock amount is named something else 
+        # (like 'stock' or 'current_quantity' instead of 'quantity'), change it in the 2 lines below!
+        if 0 < dispose_qty <= batch.quantity:
+            batch.quantity -= dispose_qty  # Deduct the disposed amount
+            batch.save()
+            messages.success(request, f"Successfully disposed {dispose_qty} units of {batch.drug.drug_name}. Reason: {reason}")
+            return redirect('inventory')
+        else:
+            messages.error(request, "Invalid amount. You cannot dispose more stock than you currently have.")
+
+    return render(request, 'core/dispose_batch.html', {'batch': batch})

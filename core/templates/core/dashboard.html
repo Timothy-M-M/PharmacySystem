@@ -23,8 +23,17 @@
         </div>
     </nav>
     <div class="container mt-5">
-        <h1 class="mb-4">Pharmacy Expiry Tracker Dashboard</h1>
-        <p class="lead">Welcome, <strong>{{ user.username }}</strong>!</p>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h1 class="mb-0">Pharmacy Expiry Tracker Dashboard</h1>
+                <p class="lead mb-0 mt-2">Welcome, <strong>{{ user.username }}</strong>!</p>
+            </div>
+            {% if request.user.is_superuser %}
+                <a href="{% url 'manage_staff' %}" class="btn btn-warning shadow-sm">
+                    ⚙️ Manage Staff Accounts
+                </a>
+            {% endif %}
+        </div>
         
         <div class="row mt-4">
             <div class="col-md-6">
