@@ -1,29 +1,29 @@
 {% extends 'core/base.html' %}
-{% block title %}POS - Pharmacy System{% endblock %}
+{% block title %}POS - PharmSync{% endblock %}
 {% block page_title %}Point of Sale{% endblock %}
-{% block breadcrumb %}Terminal{% endblock %}
+{% block breadcrumb %}Process customer transactions{% endblock %}
 
 {% block content %}
 <div class="row g-4">
     <div class="col-md-5">
         <div class="custom-card h-100">
             <h6 class="fw-bold mb-4">Add Items to Cart</h6>
-            {% if messages %}{% for msg in messages %}<div class="alert alert-{{ msg.tags }} border-0 bg-light small">{{ msg }}</div>{% endfor %}{% endif %}
+            {% if messages %}{% for msg in messages %}<div class="alert alert-{{ msg.tags }} border-0 bg-light small rounded-4">{{ msg }}</div>{% endfor %}{% endif %}
 
             <form method="POST">
                 {% csrf_token %}
                 <div class="mb-4">
                     <label class="form-label text-muted small fw-bold">SELECT PRODUCT</label>
-                    <select class="form-select bg-light border-0 py-3 rounded-4 shadow-none" name="batch_id" required>
-                        <option value="" selected disabled>Search inventory...</option>
-                        {% for batch in batches %}<option value="{{ batch.id }}">{{ batch.drug.drug_name }} | KES {{ batch.unit_price }} | Stock: {{ batch.quantity }}</option>{% endfor %}
-                    </select>
+                  <select class="form-select bg-light border-0 py-3 rounded-4 shadow-none" name="drug_id" required>
+    <option value="" selected disabled>Search inventory...</option>
+    {% for item in active_drugs %}<option value="{{ item.id }}">{{ item.name }} | KES {{ item.price }} | Total Stock: {{ item.stock }}</option>{% endfor %}
+</select>
                 </div>
                 <div class="mb-4">
                     <label class="form-label text-muted small fw-bold">QUANTITY</label>
                     <input type="number" class="form-control bg-light border-0 py-3 rounded-4 shadow-none" name="quantity" min="1" value="1" required>
                 </div>
-                <button type="submit" name="add_to_cart" class="btn btn-dark w-100 py-3 rounded-pill fw-bold mt-2">Add to Order</button>
+                <button type="submit" name="add_to_cart" class="btn w-100 py-3 rounded-pill fw-bold mt-2 text-white" style="background-color: var(--active-pill);">Add to Order</button>
             </form>
         </div>
     </div>
@@ -32,15 +32,15 @@
         <div class="custom-card h-100 d-flex flex-column">
             <div class="d-flex justify-content-between mb-4 pb-3 border-bottom">
                 <h6 class="fw-bold mb-0">Current Order</h6>
-                <span class="badge bg-light text-dark rounded-pill px-3">{{ cart|length }} Items</span>
+                <span class="badge rounded-pill px-3 text-dark" style="background-color: #c4c4f0;">{{ cart|length }} Items</span>
             </div>
 
             <div class="flex-grow-1 overflow-auto" style="min-height: 250px;">
                 {% for item in cart %}
-                <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded-4">
+                <div class="d-flex justify-content-between align-items-center mb-3 p-3 bg-light rounded-4 border-0">
                     <div>
                         <div class="fw-bold">{{ item.drug_name }}</div>
-                        <div class="text-muted small">Batch: {{ item.batch_number }} &times; {{ item.quantity }}</div>
+                        <div class="text-muted small">Qty: {{ item.quantity }} &times; KES {{ item.price }}</div>
                     </div>
                     <div class="fw-bold fs-5">KES {{ item.total }}</div>
                 </div>
@@ -51,8 +51,13 @@
 
             {% if cart %}
             <div class="mt-4 pt-4 border-top">
-                <div class="d-flex justify-content-between mb-3"><span class="text-muted">Total Amount</span><h3 class="fw-bold mb-0">KES {{ total_amount }}</h3></div>
-                <form method="POST">{% csrf_token %}<button type="submit" name="checkout" class="btn btn-dark w-100 py-3 rounded-pill fw-bold"><i class="fa-solid fa-lock" style="color: var(--accent-gold);"></i> Process Payment</button></form>
+                <div class="d-flex justify-content-between mb-3"><span class="text-muted fw-bold">Total Amount</span><h3 class="fw-bold mb-0 text-dark">KES {{ total_amount }}</h3></div>
+                <form method="POST">
+                    {% csrf_token %}
+                    <button type="submit" name="checkout" class="btn w-100 py-3 rounded-pill fw-bold text-white shadow-sm" style="background-color: #112a24;">
+                        Process Payment
+                    </button>
+                </form>
             </div>
             {% endif %}
         </div>

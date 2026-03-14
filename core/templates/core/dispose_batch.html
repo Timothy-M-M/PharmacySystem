@@ -1,19 +1,19 @@
 {% extends 'core/base.html' %}
-{% block title %}Dispose Stock - Pharmacy{% endblock %}
-{% block page_title %}Dispose Stock{% endblock %}
-{% block breadcrumb %}Inventory / Dispose{% endblock %}
+{% block title %}Dispose Stock - PharmSync{% endblock %}
+{% block page_title %}Dispose Inventory{% endblock %}
+{% block breadcrumb %}Safely remove expired or damaged stock{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-5">
-        <div class="custom-card border border-danger border-opacity-25">
-            <h6 class="fw-bold text-danger mb-4"><i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Disposal</h6>
+        <div class="custom-card" style="border-top: 5px solid #f48e8e;">
+            <h6 class="fw-bold mb-4" style="color: #5c1414;"><i class="fa-solid fa-triangle-exclamation me-2"></i> Confirm Disposal</h6>
             
-            <div class="bg-light p-3 rounded-4 mb-4 small">
-                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Product:</span><span class="fw-bold">{{ batch.drug.drug_name }}</span></div>
-                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Batch:</span><span>{{ batch.batch_number }}</span></div>
-                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Stock:</span><span>{{ batch.quantity }}</span></div>
-                <div class="d-flex justify-content-between"><span class="text-muted">Expiry:</span><span class="text-danger fw-bold">{{ batch.expiry_date|date:"M d, Y" }}</span></div>
+            <div class="p-3 rounded-4 mb-4 small" style="background-color: #fcf0f0;">
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Product:</span><span class="fw-bold text-dark">{{ batch.drug.drug_name }}</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Batch:</span><span class="text-dark">{{ batch.batch_number }}</span></div>
+                <div class="d-flex justify-content-between mb-2"><span class="text-muted">Stock:</span><span class="text-dark">{{ batch.quantity }}</span></div>
+                <div class="d-flex justify-content-between"><span class="text-muted">Expiry:</span><span class="fw-bold" style="color: #5c1414;">{{ batch.expiry_date|date:"M d, Y" }}</span></div>
             </div>
 
             <form method="POST">
@@ -30,8 +30,8 @@
                     </select>
                 </div>
                 <div class="d-flex gap-3">
-                    <a href="{% url 'inventory' %}" class="btn btn-light w-50 py-3 rounded-pill fw-bold text-dark">Cancel</a>
-                    <button type="submit" class="btn btn-danger w-50 py-3 rounded-pill fw-bold">Dispose</button>
+                    <a href="{% url 'inventory' %}" class="btn bg-light w-50 py-3 rounded-pill fw-bold text-muted">Cancel</a>
+                    <button type="submit" class="btn w-50 py-3 rounded-pill fw-bold text-dark shadow-sm" style="background-color: #f8b4b4;">Dispose</button>
                 </div>
             </form>
         </div>

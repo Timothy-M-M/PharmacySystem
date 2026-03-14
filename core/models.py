@@ -54,12 +54,7 @@ class Transaction(models.Model):
     def __str__(self):
         return f"TXN-{self.id} on {self.transaction_date.strftime('%Y-%m-%d %H:%M')}"
 
-# 5. SaleItem Entity 
-class SaleItem(models.Model):
-    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE)
-    batch = models.ForeignKey(Batch, on_delete=models.PROTECT)
-    quantity_sold = models.PositiveIntegerField()
-    price_at_sale = models.DecimalField(max_digits=10, decimal_places=2)
+
 
     def __str__(self):
         return f"{self.quantity_sold}x {self.batch.drug.drug_name} (TXN-{self.transaction.id})"
@@ -78,3 +73,35 @@ class AlertLog(models.Model):
 
     def __str__(self):
         return f"{self.alert_tier} Alert - {self.batch.batch_number}"
+    
+    
+    
+from django.contrib.auth import get_user_model
+User = get_user_model()
+class Sale(models.Model):
+    cashier = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    date_added = models.DateTimeField(auto_now_add=True)
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"Sale #{self.id} - KES {self.total_amount}"
+
+class SaleItem(models.Model):
+    sale = models.ForeignKey(Sale, related_name='items', on_delete=models.CASCADE)
+    batch = models.ForeignKey('Batch', on_delete=models.SET_NULL, null=True)
+    quantity = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    def __str__(self):
+        return f"{self.quantity} units from Batch {self.batch.batch_number if self.batch else 'Unknown'}"
+    
+class DisposalLog(models.Model):
+    drug_name = models.CharField(max_length=255)
+    batch_number = models.CharField(max_length=100)
+    quantity = models.IntegerField()
+    reason = models.CharField(max_length=255)
+    disposed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    date_disposed = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.drug_name} - {self.reason}"

@@ -2,73 +2,55 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Receipt TXN-{{ transaction.id }}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Receipt #{{ sale.id }}</title>
     <style>
-        /* This hides the print button when the actual printer dialog opens */
+        body { font-family: 'Courier New', Courier, monospace; background: #e0e4e6; display: flex; justify-content: center; padding: 2rem; color: #000; }
+        .receipt-paper { background: #fff; width: 320px; padding: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .center { text-align: center; }
+        .bold { font-weight: bold; }
+        .dashed-line { border-bottom: 1px dashed #000; margin: 10px 0; }
+        .item-row { display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 5px; }
+        .totals { display: flex; justify-content: space-between; font-size: 1.1rem; margin-top: 10px; }
+        /* Hide everything except the receipt when printing */
         @media print {
-            .no-print {
-                display: none;
-            }
-        }
-        .receipt-container {
-            max-width: 400px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 20px;
-            border: 1px solid #ccc;
+            body { background: #fff; padding: 0; }
+            .receipt-paper { box-shadow: none; width: 100%; max-width: 320px; }
+            .no-print { display: none; }
         }
     </style>
 </head>
-<body class="bg-light pt-5">
-    
-    <div class="receipt-container shadow-sm">
-        <div class="text-center mb-4">
-            <h4>Pharmacy Expiry Tracker</h4>
-            <p class="mb-0">Official Receipt</p>
-            <small>Date: {{ transaction.transaction_date|date:"Y-m-d H:i" }}</small><br>
-            <small>Cashier: {{ transaction.user.username }}</small><br>
-            <small>Receipt No: TXN-{{ transaction.id }}</small>
+<body>
+    <div class="receipt-paper">
+        <div class="center bold" style="font-size: 1.2rem;">MedStock Pharmacy</div>
+        <div class="center" style="font-size: 0.8rem;">123 Health Ave, City</div>
+        <div class="dashed-line"></div>
+        <div style="font-size: 0.8rem;">
+            <div>Receipt: #INV-00{{ sale.id }}</div>
+            <div>Date: {{ sale.date_created|date:"M d, Y H:i" }}</div>
+            <div>Cashier: {{ sale.cashier.username }}</div>
         </div>
-
-        <table class="table table-sm border-bottom">
-            <thead>
-                <tr>
-                    <th>Item / Batch</th>
-                    <th class="text-end">Qty</th>
-                    <th class="text-end">Price</th>
-                    <th class="text-end">Total</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in sold_items %}
-                <tr>
-                    <td>
-                        {{ item.batch.drug.drug_name }}<br>
-                        <small class="text-muted">Batch: {{ item.batch.batch_number }} | Exp: {{ item.batch.expiry_date|date:"y-m-d" }}</small>
-                    </td>
-                    <td class="text-end">{{ item.quantity_sold }}</td>
-                    <td class="text-end">{{ item.price_at_sale }}</td>
-                    <td class="text-end">{% widthratio item.quantity_sold 1 item.price_at_sale %}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-
-        <div class="text-end mt-3">
-            <h5>Total: KES {{ transaction.total_amount }}</h5>
-        </div>
+        <div class="dashed-line"></div>
         
-        <div class="text-center mt-4">
-            <p class="text-muted small">Thank you for your business!</p>
+        <div class="item-row bold"><span>Item (Qty)</span><span>Total</span></div>
+        {% for item in items %}
+        <div class="item-row">
+            <span>{{ item.batch.drug.drug_name }} (x{{ item.quantity }})</span>
+            <span>{{ item.price }}</span>
+        </div>
+        {% endfor %}
+        
+        <div class="dashed-line"></div>
+        <div class="totals bold"><span>TOTAL KES:</span><span>{{ sale.total_amount }}</span></div>
+        <div class="dashed-line"></div>
+        
+        <div class="center" style="font-size: 0.8rem; margin-top: 20px;">Thank you for your business!</div>
+        <div class="center no-print" style="margin-top: 20px;">
+            <button onclick="window.print()" style="padding: 10px 20px; cursor: pointer;">Print Receipt</button>
+            <br><br>
+            <a href="{% url 'pos' %}" style="color: blue; text-decoration: none;">&larr; Back to POS</a>
         </div>
     </div>
-
-    <div class="text-center mt-4 no-print">
-        <button onclick="window.print()" class="btn btn-primary me-2">Print Receipt</button>
-        <a href="{% url 'reports' %}" class="btn btn-secondary">Back to Reports</a>
-    </div>
-
+    
+    <script>window.onload = function() { window.print(); }</script>
 </body>
 </html>

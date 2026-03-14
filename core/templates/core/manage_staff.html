@@ -1,11 +1,13 @@
 {% extends 'core/base.html' %}
-{% block title %}Staff - Pharmacy System{% endblock %}
-{% block page_title %}User Management{% endblock %}
-{% block breadcrumb %}Settings / Staff{% endblock %}
+{% block title %}Users - PharmSync{% endblock %}
+{% block page_title %}System Users{% endblock %}
+{% block breadcrumb %}Manage access to PharmSync{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-end mb-4">
-    <a href="{% url 'add_staff' %}" class="btn btn-dark rounded-pill shadow-sm fw-bold px-4 py-2"><i class="fa-solid fa-plus me-2" style="color: var(--accent-gold);"></i> Add User</a>
+    <a href="{% url 'add_staff' %}" class="btn rounded-pill shadow-sm fw-bold px-4 py-2 text-white" style="background-color: var(--active-pill);">
+        <i class="fa-solid fa-plus me-2"></i> Add User
+    </a>
 </div>
 
 <div class="custom-card p-0 overflow-hidden">
@@ -20,10 +22,23 @@
         </thead>
         <tbody>
             {% for staff in staff_members %}
-            <tr style="border-bottom: 1px solid #f0f0f0;">
-                <td class="py-3 ps-4 fw-bold text-dark"><div class="d-flex align-items-center"><div class="bg-light rounded-circle p-2 me-3"><i class="fa-solid fa-user text-muted"></i></div>{{ staff.username }}</div></td>
+            <tr style="border-bottom: 1px solid #f9fafb;">
+                <td class="py-3 ps-4 fw-bold text-dark">
+                    <div class="d-flex align-items-center">
+                        <div class="rounded-circle p-2 me-3 d-flex justify-content-center align-items-center" style="background-color: #d4f0b9; color: #2d4a14; width: 35px; height: 35px;">
+                            <i class="fa-solid fa-user small"></i>
+                        </div>
+                        {{ staff.username }}
+                    </div>
+                </td>
                 <td class="py-3 text-muted">{{ staff.email|default:"—" }}</td>
-                <td class="py-3">{% if staff.is_superuser %}<span class="badge bg-dark rounded-pill px-3 fw-normal">Admin</span>{% else %}<span class="badge bg-light text-dark border rounded-pill px-3 fw-normal">Cashier</span>{% endif %}</td>
+                <td class="py-3">
+                    {% if staff.is_superuser %}
+                        <span class="badge rounded-pill px-3 text-dark fw-bold" style="background-color: #c4c4f0;">Admin</span>
+                    {% else %}
+                        <span class="badge bg-light text-dark border rounded-pill px-3 fw-bold">Cashier</span>
+                    {% endif %}
+                </td>
                 <td class="py-3 pe-4 text-muted text-end">{{ staff.date_joined|date:"M d, Y" }}</td>
             </tr>
             {% endfor %}

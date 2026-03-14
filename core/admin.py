@@ -1,10 +1,9 @@
 from django.contrib import admin
-from .models import User, Drug, Batch, Transaction, SaleItem, AlertLog
+from .models import Drug, Batch, Sale, SaleItem, DisposalLog
 
-# This tells Django to show these tables in your Admin panel [cite: 71, 230]
-admin.site.register(User)
+# Register your database tables here so they appear in the admin panel
 admin.site.register(Drug)
 admin.site.register(Batch)
-admin.site.register(Transaction)
+admin.site.register(Sale)
 admin.site.register(SaleItem)
-admin.site.register(AlertLog)
+admin.site.register(DisposalLog)

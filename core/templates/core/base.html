@@ -2,146 +2,114 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{% block title %}Pharmacy System{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MedStock{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* New Minimalist Medrack Color Palette */
         :root {
-            --bg-color: #f8f9fa; /* Very soft off-white background */
+            --bg-body: #f4f7f6;
             --sidebar-bg: #ffffff;
-            --text-main: #1a1a1a;
-            --text-muted: #8e95a5;
-            --accent-gold: #eab308; /* The yellow/gold from the image */
-            --accent-light: #fff8eb; /* Light yellow background for active items */
-            --card-bg: #ffffff;
+            --text-main: #112a24;
+            --active-pill: #164f45;
         }
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Segoe UI', Roboto, sans-serif;
-            overflow-x: hidden;
-        }
+        body { background-color: var(--bg-body); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: var(--text-main); }
         
         /* Sidebar Styling */
-        .sidebar {
-            height: 100vh;
-            width: 250px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            background-color: var(--sidebar-bg);
-            padding-top: 30px;
-            border-right: 1px solid #f0f0f0; /* Very subtle border instead of drop shadow */
-            z-index: 1000;
-        }
-        .sidebar-brand {
-            font-size: 1.2rem;
-            font-weight: bold;
-            padding: 0 25px 30px;
-            color: var(--text-main);
-            letter-spacing: 0.5px;
-        }
-        .nav-item { padding: 0 15px; margin-bottom: 4px; }
-        .nav-link {
-            color: var(--text-muted);
-            border-radius: 8px;
-            padding: 12px 20px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-weight: 500;
-            transition: all 0.2s;
-        }
-        .nav-link:hover { color: var(--text-main); }
-        /* The new yellow active state */
-        .nav-link.active { 
-            background-color: var(--accent-light); 
-            color: var(--accent-gold); 
-            font-weight: 600; 
-        }
+        .sidebar { background-color: var(--sidebar-bg); min-height: 100vh; width: 250px; position: fixed; border-right: 1px solid #eef0ef; }
+        .sidebar-brand { font-weight: 800; font-size: 1.25rem; color: var(--text-main); padding: 1.5rem; display: flex; align-items: center; gap: 10px; }
+        .nav-link { color: #6b7280; border-radius: 50rem; padding: 0.8rem 1.5rem; margin: 0.2rem 1rem; font-weight: 600; font-size: 0.9rem; transition: all 0.2s; }
+        .nav-link:hover { background-color: #f3f4f6; color: var(--text-main); }
+        .nav-link.active { background-color: var(--active-pill); color: white; box-shadow: 0 4px 12px rgba(22, 79, 69, 0.2); }
+        .nav-link i { width: 20px; text-align: center; margin-right: 8px; }
+        .menu-label { font-size: 0.7rem; font-weight: 700; color: #9ca3af; letter-spacing: 1px; padding: 1rem 1.5rem 0.5rem; text-transform: uppercase; }
+
+        /* Main Content */
+        .main-content { margin-left: 250px; padding: 2rem; }
         
-        /* Main Content Area */
-        .main-content {
-            margin-left: 250px;
-            padding: 40px 50px;
-            min-height: 100vh;
-        }
-        .top-bar { margin-bottom: 40px; }
+        /* Top Navigation */
+        .top-bar { background-color: transparent; padding-bottom: 2rem; }
+        .search-bar { background-color: white; border: none; border-radius: 50rem; padding: 0.6rem 1.5rem; width: 300px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); }
+        .user-pill { background-color: white; padding: 0.4rem 0.4rem 0.4rem 1rem; border-radius: 50rem; box-shadow: 0 2px 10px rgba(0,0,0,0.02); display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 0.9rem;}
         
-        /* Modern Minimalist Cards */
-        .custom-card {
-            background: var(--card-bg);
-            border-radius: 16px;
-            border: 1px solid #f0f0f0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.01); /* Barely visible shadow */
-            padding: 24px;
-            margin-bottom: 24px;
-        }
+        /* Universal Card Styling */
+        .custom-card { background-color: white; border-radius: 1rem; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.03); padding: 1.5rem; }
     </style>
 </head>
 <body>
-
-    <div class="sidebar">
+    <div class="sidebar d-flex flex-column">
         <div class="sidebar-brand">
-            <i class="fa-solid fa-layer-group me-2" style="color: var(--accent-gold);"></i> Pharmacy
+            <i class="fa-solid fa-staff-snake fs-4"></i> MedStock
         </div>
         
-        <div class="nav flex-column mt-3">
-            <p class="text-muted small px-4 mb-2 fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">MENU</p>
-            
-            <div class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">
-                    <i class="fa-solid fa-border-all w-20px"></i> Dashboard
-                </a>
-            </div>
-            <div class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'pos' %}active{% endif %}" href="{% url 'pos' %}">
-                    <i class="fa-solid fa-desktop w-20px"></i> POS
-                </a>
-            </div>
-            <div class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}" href="{% url 'inventory' %}">
-                    <i class="fa-solid fa-boxes-stacked w-20px"></i> Inventory Management
-                </a>
-            </div>
-            
-            <p class="text-muted small px-4 mt-4 mb-2 fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">SETTINGS</p>
-            {% if request.user.is_superuser %}
-            <div class="nav-item">
-                <a class="nav-link {% if request.resolver_match.url_name == 'manage_staff' %}active{% endif %}" href="{% url 'manage_staff' %}">
-                    <i class="fa-regular fa-user w-20px"></i> User Management
-                </a>
-            </div>
-            {% endif %}
-            <div class="nav-item mt-auto pt-4">
-                <a class="nav-link text-danger" href="{% url 'logout' %}">
-                    <i class="fa-solid fa-arrow-right-from-bracket w-20px"></i> Logout
-                </a>
-            </div>
-        </div>
+        <div class="menu-label">Main Menu</div>
+        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="fa-solid fa-house"></i> Dashboard
+        </a>
+        <a href="{% url 'pos' %}" class="nav-link {% if request.resolver_match.url_name == 'pos' %}active{% endif %}">
+            <i class="fa-solid fa-cash-register"></i> Point of Sale
+        </a>
+
+        <div class="menu-label">Inventory</div>
+        <a href="{% url 'inventory' %}" class="nav-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}">
+            <i class="fa-solid fa-boxes-stacked"></i> Stock Management
+        </a>
+        
+        <div class="menu-label">Settings</div>
+        <a href="{% url 'reports' %}" class="nav-link {% if request.resolver_match.url_name == 'reports' %}active{% endif %}">
+            <i class="fa-solid fa-chart-pie"></i> Analytics & Reports
+        </a>
+        <a href="{% url 'audit_log' %}" class="nav-link {% if request.resolver_match.url_name == 'audit_log' %}active{% endif %}">
+            <i class="fa-solid fa-clipboard-list"></i> Audit Log
+        </a>
+        <a href="{% url 'manage_staff' %}" class="nav-link {% if request.resolver_match.url_name == 'manage_staff' %}active{% endif %}">
+            <i class="fa-solid fa-users"></i> System Users
+        </a>
+        <form method="POST" action="{% url 'logout' %}" class="mt-auto mb-4 px-3">
+            {% csrf_token %}
+            <button type="submit" class="nav-link text-danger border-0 w-100 text-start bg-transparent">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+            </button>
+        </form>
     </div>
 
     <div class="main-content">
-        <div class="top-bar d-flex justify-content-between align-items-end">
-            <div>
-                <h2 class="mb-1 fw-bold" style="letter-spacing: -0.5px;">{% block page_title %}Analytics{% endblock %}</h2>
-                <div class="text-muted small">Pharmacy / {% block breadcrumb %}Analytics{% endblock %}</div>
+        <div class="top-bar d-flex justify-content-between align-items-center">
+            <div class="position-relative">
+                <i class="fa-solid fa-search position-absolute text-muted" style="top: 12px; left: 15px;"></i>
+                <input type="text" id="globalSearch" class="search-bar ps-5" placeholder="Search records...">
             </div>
-            <div class="d-flex align-items-center gap-2">
-                <div class="text-end me-2">
-                    <div class="fw-bold fs-6 lh-1">{{ request.user.username }}</div>
-                </div>
-                <div class="bg-light rounded-circle d-flex justify-content-center align-items-center" style="width: 40px; height: 40px;">
+            <div class="user-pill">
+                <span>{{ user.username|title }}</span>
+                <div class="bg-light rounded-circle d-flex justify-content-center align-items-center" style="width: 35px; height: 35px;">
                     <i class="fa-solid fa-user text-muted"></i>
                 </div>
             </div>
         </div>
 
-        {% block content %}
-        {% endblock %}
-    </div>
+        <div class="mb-4">
+            <h3 class="fw-bold mb-1">{% block page_title %}{% endblock %}</h3>
+            <p class="text-muted small">{% block breadcrumb %}{% endblock %}</p>
+        </div>
 
+        {% block content %}{% endblock %}
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('globalSearch');
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function() {
+                let filter = this.value.toLowerCase();
+                let tableRows = document.querySelectorAll('tbody tr'); 
+                
+                tableRows.forEach(row => {
+                    let text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(filter) ? '' : 'none';
+                });
+            });
+        }
+    });
+</script>
 </body>
 </html>

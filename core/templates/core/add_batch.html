@@ -1,7 +1,7 @@
 {% extends 'core/base.html' %}
-{% block title %}Receive Batch - Pharmacy{% endblock %}
+{% block title %}Receive Batch - PharmSync{% endblock %}
 {% block page_title %}Receive Stock{% endblock %}
-{% block breadcrumb %}Inventory / Receive Batch{% endblock %}
+{% block breadcrumb %}Add a physical batch to your inventory{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -40,8 +40,8 @@
                     </div>
                 </div>
                 <div class="d-flex justify-content-end gap-3 mt-4 pt-3 border-top">
-                    <a href="{% url 'inventory' %}" class="btn btn-light px-5 py-3 rounded-pill fw-bold text-dark">Cancel</a>
-                    <button type="submit" class="btn btn-dark px-5 py-3 rounded-pill fw-bold">Confirm Stock</button>
+                    <a href="{% url 'inventory' %}" class="btn bg-light px-5 py-3 rounded-pill fw-bold text-muted">Cancel</a>
+                    <button type="submit" class="btn px-5 py-3 rounded-pill fw-bold text-white" style="background-color: var(--active-pill);">Confirm Stock</button>
                 </div>
             </form>
         </div>
