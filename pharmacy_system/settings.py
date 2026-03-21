@@ -70,6 +70,11 @@ DATABASES = {
 }
 
 # ==========================================
+# CUSTOM USER MODEL (THIS IS THE FIX!)
+# ==========================================
+AUTH_USER_MODEL = 'core.User'
+
+# ==========================================
 # PASSWORD VALIDATION
 # ==========================================
 AUTH_PASSWORD_VALIDATORS = [
