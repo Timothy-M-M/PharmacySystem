@@ -26,13 +26,13 @@
         <div class="dashed-line"></div>
         <div style="font-size: 0.8rem;">
             <div>Receipt: #INV-00{{ sale.id }}</div>
-            <div>Date: {{ sale.date_created|date:"M d, Y H:i" }}</div>
+            <div>Date: {{ sale.date_added|date:"M d, Y H:i" }}</div>
             <div>Cashier: {{ sale.cashier.username }}</div>
         </div>
         <div class="dashed-line"></div>
         
         <div class="item-row bold"><span>Item (Qty)</span><span>Total</span></div>
-        {% for item in items %}
+        {% for item in sale.items.all %}
         <div class="item-row">
             <span>{{ item.batch.drug.drug_name }} (x{{ item.quantity }})</span>
             <span>{{ item.price }}</span>
