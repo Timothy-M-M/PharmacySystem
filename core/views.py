@@ -14,15 +14,12 @@ User = get_user_model()
 # SECURITY BOUNCERS
 # ==========================================
 def is_manager(user):
-    # This checks if the user has the "Staff status" box checked
     return user.is_staff
 
 # ==========================================
 # AUTHENTICATION VIEWS
 # ==========================================
-
 def custom_login(request):
-    # If they are already logged in, send them straight to the dashboard
     if request.user.is_authenticated:
         return redirect('dashboard')
 
@@ -30,7 +27,6 @@ def custom_login(request):
         u = request.POST.get('username')
         p = request.POST.get('password')
         
-        # Check if the credentials match the database
         user = authenticate(request, username=u, password=p)
         
         if user is not None:
@@ -49,7 +45,6 @@ def custom_logout(request):
 # ==========================================
 # PUBLIC VIEWS (Accessible by Cashiers)
 # ==========================================
-
 @login_required(login_url='login')
 def pos(request):
     from .models import Drug, Batch, Sale, SaleItem
@@ -61,7 +56,6 @@ def pos(request):
     cart = request.session['cart']
     
     if request.method == 'POST':
-        # --- ADD TO CART LOGIC ---
         if 'add_to_cart' in request.POST:
             drug_id = request.POST.get('drug_id')
             quantity = int(request.POST.get('quantity', 1))
@@ -89,7 +83,6 @@ def pos(request):
                 messages.error(request, "Product not found.")
             return redirect('pos')
             
-        # --- SMART CHECKOUT LOGIC (FEFO) ---
         elif 'checkout' in request.POST:
             if cart:
                 total_amount = sum(float(item['total']) for item in cart)
@@ -115,7 +108,6 @@ def pos(request):
 
     total_amount = sum(float(item['total']) for item in cart)
     
-    # Bundle the drugs for the HTML Dropdown
     active_drugs = []
     drugs = Drug.objects.filter(batch__quantity__gt=0).distinct()
     for drug in drugs:
@@ -134,14 +126,8 @@ def pos(request):
 @login_required(login_url='login')
 def receipt(request, sale_id):
     from .models import Sale, SaleItem
-    
-    # 1. Get the main transaction
     sale = Sale.objects.get(id=sale_id)
-    
-    # 2. Fetch all the individual products tied to this specific transaction
     items = SaleItem.objects.filter(sale=sale) 
-    
-    # 3. Send BOTH to the receipt template
     context = {
         'sale': sale,
         'items': items,
@@ -152,7 +138,6 @@ def receipt(request, sale_id):
 # ==========================================
 # RESTRICTED VIEWS (Managers & Admins Only)
 # ==========================================
-
 @login_required(login_url='login')
 @user_passes_test(is_manager, login_url='pos')
 def dashboard(request):
@@ -163,14 +148,20 @@ def dashboard(request):
     today = date.today()
     thirty_days = today + timedelta(days=30)
 
-    # 1. Calculate Real Inventory Metrics
     total_drugs = Drug.objects.count()
     active_batches = Batch.objects.filter(quantity__gt=0).count()
-    low_stock = Batch.objects.filter(quantity__lt=20, quantity__gt=0).count()
-    expired_count = Batch.objects.filter(expiry_date__lt=today).count()
-    expiring_soon = Batch.objects.filter(expiry_date__gte=today, expiry_date__lte=thirty_days).count()
+    
+    # [FIX] Only count expired batches that still have physical stock
+    expired_count = Batch.objects.filter(expiry_date__lt=today, quantity__gt=0).count()
+    expiring_soon = Batch.objects.filter(expiry_date__gte=today, expiry_date__lte=thirty_days, quantity__gt=0).count()
 
-    # 2. Calculate Total Live Revenue
+    # [FIX] Calculate low stock by checking the TOTAL drug quantity, not individual batches
+    low_stock = 0
+    for drug in Drug.objects.all():
+        total = Batch.objects.filter(drug=drug, quantity__gt=0).aggregate(Sum('quantity'))['quantity__sum'] or 0
+        if 0 < total < 20:
+            low_stock += 1
+
     revenue_data = Sale.objects.aggregate(Sum('total_amount'))
     total_revenue = revenue_data['total_amount__sum'] or 0.00 
 
@@ -188,21 +179,43 @@ def dashboard(request):
 
 @login_required(login_url='login')
 @user_passes_test(is_manager, login_url='pos')
-def inventory(request):
-    # Grab all batches and sort them by expiry date (earliest first)
-    batches = Batch.objects.all().order_by('expiry_date')
+def alerts(request):
+    from .models import Drug, Batch
+    from django.db.models import Sum
+    from datetime import date
+    today = date.today()
     
-    context = {
-        'batches': batches,
-    }
-    return render(request, 'core/inventory.html', context)
+    # [FIX] Hide expired batches if they have already been disposed (quantity = 0)
+    expired_batches = Batch.objects.filter(expiry_date__lt=today, quantity__gt=0)
+    
+    # [FIX] Check low stock for the whole drug, resolving the alert if a new batch is added
+    low_stock_drugs = []
+    for drug in Drug.objects.all():
+        total_stock = Batch.objects.filter(drug=drug, quantity__gt=0).aggregate(Sum('quantity'))['quantity__sum'] or 0
+        if 0 < total_stock < 20:
+            low_stock_drugs.append({
+                'drug_name': drug.drug_name,
+                'total_stock': total_stock,
+                'unit': drug.unit
+            })
+            
+    return render(request, 'core/alerts.html', {
+        'expired_batches': expired_batches,
+        'low_stock_drugs': low_stock_drugs
+    })
+
+
+@login_required(login_url='login')
+@user_passes_test(is_manager, login_url='pos')
+def inventory(request):
+    batches = Batch.objects.all().order_by('expiry_date')
+    return render(request, 'core/inventory.html', {'batches': batches})
 
 
 @login_required(login_url='login')
 @user_passes_test(is_manager, login_url='pos')
 def add_batch(request):
     from .models import Drug, Batch
-    
     if request.method == 'POST':
         try:
             drug_id = request.POST.get('drug_id')
@@ -213,19 +226,9 @@ def add_batch(request):
             expiry_date = request.POST.get('expiry_date')
 
             drug = Drug.objects.get(id=drug_id)
-            
-            Batch.objects.create(
-                drug=drug,
-                batch_number=batch_number,
-                quantity=quantity,
-                unit_price=unit_price,
-                mfg_date=mfg_date,
-                expiry_date=expiry_date
-            )
-            
+            Batch.objects.create(drug=drug, batch_number=batch_number, quantity=quantity, unit_price=unit_price, mfg_date=mfg_date, expiry_date=expiry_date)
             messages.success(request, f"Batch {batch_number} received successfully!")
             return redirect('inventory')
-            
         except Exception as e:
             messages.error(request, f"System Error: {str(e)}")
             
@@ -250,16 +253,11 @@ def reports(request):
     acquisition_list = Batch.objects.all().order_by('-id')[:50]
     
     context = {
-        'total_revenue': total_rev,
-        'total_sales_count': sales_count,
-        'active_inventory': active_inv,
-        'total_disposed': disposed_count,
-        'sales_list': sales_list,
-        'inventory_list': inventory_list,
-        'disposal_list': disposal_list,
-        'acquisition_list': acquisition_list,
+        'total_revenue': total_rev, 'total_sales_count': sales_count,
+        'active_inventory': active_inv, 'total_disposed': disposed_count,
+        'sales_list': sales_list, 'inventory_list': inventory_list,
+        'disposal_list': disposal_list, 'acquisition_list': acquisition_list,
     }
-    
     return render(request, 'core/reports.html', context)
 
 
@@ -275,13 +273,9 @@ def add_drug(request):
             if Drug.objects.filter(drug_name__iexact=drug_name).exists():
                 messages.error(request, f"The medication '{drug_name}' is already registered in the catalog.")
             else:
-                Drug.objects.create(
-                    drug_name=drug_name,
-                    unit=unit
-                )
-                messages.success(request, f"'{drug_name}' registered successfully! You can now add batches for it.")
+                Drug.objects.create(drug_name=drug_name, unit=unit)
+                messages.success(request, f"'{drug_name}' registered successfully!")
                 return redirect('inventory')
-                
         except Exception as e:
             messages.error(request, f"An error occurred: {e}")
             
@@ -298,14 +292,7 @@ def dispose_batch(request, batch_id):
         qty = int(request.POST.get('dispose_quantity'))
         reason = request.POST.get('reason')
         
-        DisposalLog.objects.create(
-            drug_name=batch.drug.drug_name,
-            batch_number=batch.batch_number,
-            quantity=qty,
-            reason=reason,
-            disposed_by=request.user
-        )
-        
+        DisposalLog.objects.create(drug_name=batch.drug.drug_name, batch_number=batch.batch_number, quantity=qty, reason=reason, disposed_by=request.user)
         batch.quantity -= qty
         batch.save()
         messages.success(request, f"Disposed {qty} units of {batch.drug.drug_name}.")
@@ -324,26 +311,9 @@ def audit_log(request):
 
 @login_required(login_url='login')
 @user_passes_test(is_manager, login_url='pos')
-def alerts(request):
-    from .models import Batch
-    from datetime import date
-    today = date.today()
-    
-    expired_batches = Batch.objects.filter(expiry_date__lt=today)
-    low_stock_batches = Batch.objects.filter(quantity__lt=20, quantity__gt=0)
-    
-    return render(request, 'core/alerts.html', {
-        'expired_batches': expired_batches,
-        'low_stock_batches': low_stock_batches
-    })
-
-
-@login_required(login_url='login')
-@user_passes_test(is_manager, login_url='pos')
 def system_report(request):
     from .models import Drug, Batch, Sale, DisposalLog
     from django.db.models import Sum
-    
     context = {
         'total_revenue': Sale.objects.aggregate(Sum('total_amount'))['total_amount__sum'] or 0,
         'total_sales_count': Sale.objects.count(),
@@ -352,16 +322,15 @@ def system_report(request):
     }
     return render(request, 'core/reports.html', context)
 
+
 # ==========================================
 # SUPERUSER ONLY VIEWS
 # ==========================================
-
 @login_required(login_url='login')
 def manage_staff(request):
     if not request.user.is_superuser:
-        messages.error(request, "Access Denied: Only Administrators can manage staff.")
+        messages.error(request, "Access Denied.")
         return redirect('dashboard')
-    
     staff_members = User.objects.all()
     return render(request, 'core/manage_staff.html', {'staff_members': staff_members})
 
@@ -369,7 +338,7 @@ def manage_staff(request):
 @login_required(login_url='login')
 def add_staff(request):
     if not request.user.is_superuser:
-        messages.error(request, "Access Denied: Only Administrators can add staff.")
+        messages.error(request, "Access Denied.")
         return redirect('dashboard')
 
     if request.method == 'POST':
@@ -378,10 +347,10 @@ def add_staff(request):
         email = request.POST.get('email')
         
         if User.objects.filter(username=u_name).exists():
-            messages.error(request, f"The username '{u_name}' is already taken.")
+            messages.error(request, f"Username '{u_name}' is already taken.")
         else:
             User.objects.create_user(username=u_name, email=email, password=p_word)
-            messages.success(request, f"Cashier account '{u_name}' created successfully!")
+            messages.success(request, f"Account '{u_name}' created successfully!")
             return redirect('manage_staff')
 
     return render(request, 'core/add_staff.html')
