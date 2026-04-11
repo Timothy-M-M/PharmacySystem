@@ -70,7 +70,7 @@ DATABASES = {
 }
 
 # ==========================================
-# CUSTOM USER MODEL (THIS IS THE FIX!)
+# CUSTOM USER MODEL (THE CRITICAL FIX)
 # ==========================================
 AUTH_USER_MODEL = 'core.User'
 
@@ -104,9 +104,6 @@ USE_TZ = True
 # STATIC FILES (CSS, JS, Images) - PRODUCTION
 # ==========================================
 STATIC_URL = 'static/'
-
-# This tells the live server exactly where to gather all your CSS files
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

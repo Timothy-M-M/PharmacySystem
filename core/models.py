@@ -5,14 +5,17 @@ from django.utils import timezone
 
 # 1. User Entity 
 class User(AbstractUser):
-    ROLE_CHOICES = (
-        ('Admin', 'Administrator'),
-        ('Pharmacist', 'Pharmacist / Cashier'),
+    # This prevents the cloud database from crashing into Django's default tables
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='core_user_groups',
+        blank=True,
     )
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='Pharmacist')
-
-    def __str__(self):
-        return f"{self.username} ({self.role})"
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='core_user_permissions',
+        blank=True,
+    )
 
 # 2. Drug Entity 
 class Drug(models.Model):
